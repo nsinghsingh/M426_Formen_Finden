@@ -1,0 +1,81 @@
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+
+namespace testBitmap
+{
+    class Program
+    {
+        Bitmap scan = new Bitmap(@"C:\Users\vmadmin\Desktop\testBit\Columns.jpg", true);
+        Bitmap[] columnsBitmap = new Bitmap[0];
+
+        public void getColumn()
+        {
+            Array.Resize(ref columnsBitmap, columnsBitmap.Length + 1);
+            int xStart = 0;
+            int xEnd = 0;
+            int yStart = 0;
+            int yEnd = scan.Height - 1;
+            for (int x = 0; x < scan.Width; x++)
+            {
+                
+                bool hasBlack = false;
+                for (int y = 0; y < scan.Height; y++)
+                {
+                    if (!scan.GetPixel(x, y).ToArgb().Equals(-1))
+                    {
+                        hasBlack = true;
+                    }
+                }
+                if (hasBlack)
+                {
+                    xEnd = x;
+                }
+                else
+                {
+                    if(xEnd > xStart)
+                    {
+                        Rectangle columnArea = new Rectangle(xStart, yStart, xEnd - xStart, yEnd - yStart);
+                        columnsBitmap[0] = scan.Clone(columnArea, scan.PixelFormat);
+                    }
+                    xStart = x;
+                }
+            }
+            int id = 0;
+            foreach (Bitmap item in columnsBitmap)
+            {
+                ImageCodecInfo myImageCodecInfo;
+                Encoder myEncoder;
+                EncoderParameter myEncoderParameter;
+                EncoderParameters myEncoderParameters;
+                myEncoder = Encoder.Quality;
+                myImageCodecInfo = GetEncoderInfo("image/jpeg");
+                myEncoderParameters = new EncoderParameters(1);
+                myEncoderParameter = new EncoderParameter(myEncoder, 50L);
+                myEncoderParameters.Param[0] = myEncoderParameter;
+                item.Save("../../../Shapes" + id + ".jpg", myImageCodecInfo, myEncoderParameters);
+                id += 1;
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            Program program = new Program();
+            program.getColumn();
+        }
+
+        private static ImageCodecInfo GetEncoderInfo(String mimeType)
+        {
+            int j;
+            ImageCodecInfo[] encoders;
+            encoders = ImageCodecInfo.GetImageEncoders();
+            for (j = 0; j < encoders.Length; ++j)
+            {
+                if (encoders[j].MimeType == mimeType)
+                    return encoders[j];
+            }
+            return null;
+        }
+
+    }
+}
